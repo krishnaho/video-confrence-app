@@ -16,9 +16,9 @@ function App() {
   });
   
   const localVideoRef = useRef(null);
-  const remoteVideoRefs = useRef({});
   const peerInstance = useRef(null);
   const localStreamRef = useRef(null);
+  const connectionsRef = useRef({});
 
   // Initialize PeerJS and check devices
   useEffect(() => {
@@ -46,12 +46,17 @@ function App() {
     peer.on('call', (call) => {
       if (isBroadcasting && localStreamRef.current) {
         call.answer(localStreamRef.current);
+        connectionsRef.current[call.peer] = call;
         
         call.on('stream', (remoteStream) => {
-          setActiveConnections(prev => [...prev, { peerId: call.peer, stream: remoteStream }]);
+          setActiveConnections(prev => [
+            ...prev.filter(conn => conn.peerId !== call.peer),
+            { peerId: call.peer, stream: remoteStream }
+          ]);
         });
         
         call.on('close', () => {
+          delete connectionsRef.current[call.peer];
           setActiveConnections(prev => prev.filter(conn => conn.peerId !== call.peer));
         });
       }
@@ -108,6 +113,7 @@ function App() {
       localVideoRef.current.srcObject = stream;
       
       const call = peerInstance.current.call(remotePeerId, stream);
+      connectionsRef.current[remotePeerId] = call;
       
       call.on('stream', (remoteStream) => {
         setActiveConnections([{ peerId: remotePeerId, stream: remoteStream }]);
@@ -115,6 +121,7 @@ function App() {
       });
       
       call.on('close', () => {
+        delete connectionsRef.current[remotePeerId];
         setConnectionStatus('Disconnected');
         setActiveConnections([]);
       });
@@ -144,6 +151,9 @@ function App() {
     if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
+    
+    Object.values(connectionsRef.current).forEach(conn => conn.close());
+    connectionsRef.current = {};
     
     setIsBroadcasting(false);
     setIsViewing(false);
@@ -183,12 +193,7 @@ function App() {
             <video 
               className="video-element"
               autoPlay
-              ref={video => {
-                if (video) {
-                  remoteVideoRefs.current[connection.peerId] = video;
-                  video.srcObject = connection.stream;
-                }
-              }}
+              ref={video => video && (video.srcObject = connection.stream)}
             />
           </div>
         ))}
@@ -199,12 +204,7 @@ function App() {
             <video 
               className="video-element"
               autoPlay 
-              ref={video => {
-                if (video) {
-                  remoteVideoRefs.current[connection.peerId] = video;
-                  video.srcObject = connection.stream;
-                }
-              }}
+              ref={video => video && (video.srcObject = connection.stream)}
             />
           </div>
         ))}
