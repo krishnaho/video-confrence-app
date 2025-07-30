@@ -20,10 +20,8 @@ A frontend-only video conferencing application built with React, Vite, and WebRT
 -  [styled-components](https://styled-components.com/) - CSS-in-JS
 -  [react-copy-to-clipboard](https://www.npmjs.com/package/react-copy-to-clipboard) - Easy copy functionality
 
+
 ## Getting Started
-
-
-
 npm  i
 npm run dev
 
