@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
 import { FaCopy, FaPhone, FaPhoneSlash, FaUserAlt } from 'react-icons/fa';
 import Peer from 'peerjs';
-import { useBroadcastChannel } from './useBroadcastChannel';
 
 function App() {
   const [peerId, setPeerId] = useState('');
   const [remotePeerId, setRemotePeerId] = useState('');
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [isViewing, setIsViewing] = useState(false);
-  const [peers, setPeers] = useState([]);
+  const [activeConnections, setActiveConnections] = useState([]);
   const [connectionStatus, setConnectionStatus] = useState('Disconnected');
   const [deviceStatus, setDeviceStatus] = useState({
     video: null,
@@ -17,9 +16,11 @@ function App() {
   });
   
   const localVideoRef = useRef(null);
+  const remoteVideoRefs = useRef({});
   const peerInstance = useRef(null);
-  const remoteStreams = useRef([]);
+  const localStreamRef = useRef(null);
 
+  // Initialize PeerJS and check devices
   useEffect(() => {
     const checkDevices = async () => {
       try {
@@ -36,10 +37,6 @@ function App() {
       }
     };
 
-    checkDevices();
-  }, []);
-
-  useEffect(() => {
     const peer = new Peer();
     
     peer.on('open', (id) => {
@@ -47,12 +44,15 @@ function App() {
     });
 
     peer.on('call', (call) => {
-      if (isBroadcasting && localVideoRef.current?.srcObject) {
-        call.answer(localVideoRef.current.srcObject);
-        addPeer(call.peer);
+      if (isBroadcasting && localStreamRef.current) {
+        call.answer(localStreamRef.current);
+        
+        call.on('stream', (remoteStream) => {
+          setActiveConnections(prev => [...prev, { peerId: call.peer, stream: remoteStream }]);
+        });
         
         call.on('close', () => {
-          removePeer(call.peer);
+          setActiveConnections(prev => prev.filter(conn => conn.peerId !== call.peer));
         });
       }
     });
@@ -63,25 +63,12 @@ function App() {
     });
 
     peerInstance.current = peer;
+    checkDevices();
 
     return () => {
       peer.destroy();
     };
   }, [isBroadcasting]);
-
-  const { postMessage } = useBroadcastChannel({
-    onMessage: (message) => {
-      if (message.type === 'PEER_ID' && !isBroadcasting) {
-        setRemotePeerId(message.data);
-      }
-    }
-  });
-
-  useEffect(() => {
-    if (peerId && isBroadcasting) {
-      postMessage({ type: 'PEER_ID', data: peerId });
-    }
-  }, [peerId, isBroadcasting, postMessage]);
 
   const startBroadcasting = async () => {
     try {
@@ -91,7 +78,6 @@ function App() {
       }).catch(err => {
         console.error('Media device error:', err);
         setConnectionStatus(`Error: ${err.message}`);
-        
         if (err.name === 'NotFoundError') {
           alert('No camera/microphone found. Please connect a device and try again.');
         } else if (err.name === 'NotAllowedError') {
@@ -100,6 +86,7 @@ function App() {
         throw err;
       });
 
+      localStreamRef.current = stream;
       localVideoRef.current.srcObject = stream;
       setIsBroadcasting(true);
       setIsViewing(false);
@@ -123,13 +110,13 @@ function App() {
       const call = peerInstance.current.call(remotePeerId, stream);
       
       call.on('stream', (remoteStream) => {
-        remoteStreams.current.push(remoteStream);
+        setActiveConnections([{ peerId: remotePeerId, stream: remoteStream }]);
         setConnectionStatus('Connected');
       });
       
       call.on('close', () => {
         setConnectionStatus('Disconnected');
-        remoteStreams.current = [];
+        setActiveConnections([]);
       });
       
       call.on('error', (err) => {
@@ -145,28 +132,23 @@ function App() {
   const hangUp = () => {
     if (peerInstance.current) {
       peerInstance.current.destroy();
-      const newPeer = new Peer(peerId);
+      const newPeer = new Peer();
       peerInstance.current = newPeer;
     }
     
-    if (localVideoRef.current?.srcObject) {
-      localVideoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
+    }
+    
+    if (localVideoRef.current) {
       localVideoRef.current.srcObject = null;
     }
     
     setIsBroadcasting(false);
     setIsViewing(false);
     setConnectionStatus('Disconnected');
-    setPeers([]);
-    remoteStreams.current = [];
-  };
-
-  const addPeer = (peerId) => {
-    setPeers(prevPeers => [...prevPeers, peerId]);
-  };
-
-  const removePeer = (peerId) => {
-    setPeers(prevPeers => prevPeers.filter(id => id !== peerId));
+    setActiveConnections([]);
   };
 
   const copyToClipboard = () => {
@@ -195,23 +177,34 @@ function App() {
           <video className="video-element" ref={localVideoRef} autoPlay muted />
         </div>
         
-        {isBroadcasting && peers.map((peer, index) => (
-          <div className="video-box" key={index}>
+        {isBroadcasting && activeConnections.map((connection, index) => (
+          <div className="video-box" key={connection.peerId}>
             <h3>Viewer {index + 1}</h3>
-            <video className="video-element" autoPlay />
-            <div className="peer-status">Connected</div>
+            <video 
+              className="video-element"
+              autoPlay
+              ref={video => {
+                if (video) {
+                  remoteVideoRefs.current[connection.peerId] = video;
+                  video.srcObject = connection.stream;
+                }
+              }}
+            />
           </div>
         ))}
         
-        {isViewing && remoteStreams.current.map((stream, index) => (
-          <div className="video-box" key={index}>
+        {isViewing && activeConnections.map(connection => (
+          <div className="video-box" key={connection.peerId}>
             <h3>Broadcaster</h3>
             <video 
               className="video-element"
               autoPlay 
               ref={video => {
-                if (video) video.srcObject = stream;
-              }} 
+                if (video) {
+                  remoteVideoRefs.current[connection.peerId] = video;
+                  video.srcObject = connection.stream;
+                }
+              }}
             />
           </div>
         ))}
@@ -242,7 +235,7 @@ function App() {
         
         <div className="connection-data">
           <div>
-            <label  className="id-label">Your ID:</label>
+            <label className="id-label">Your ID:</label>
             <input className="input-field" value={peerId} readOnly />
             <button className="btn btn-default" onClick={copyToClipboard}>
               <FaCopy /> Copy
@@ -250,7 +243,7 @@ function App() {
           </div>
           
           <div>
-            <label className="id-label ">Connect to Broadcaster ID:</label>
+            <label className="id-label">Connect to Broadcaster ID:</label>
             <input 
               className="input-field"
               value={remotePeerId}
