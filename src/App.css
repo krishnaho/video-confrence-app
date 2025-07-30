@@ -1,0 +1,190 @@
+/* App.css */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.app-title {
+  color: white;
+}
+
+.connection-status {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+}
+
+.connection-status.connected {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.connection-status.connecting {
+  background-color: #FFC107;
+  color: black;
+}
+
+.connection-status.error {
+  background-color: #F44336;
+  color: white;
+}
+
+.connection-status.disconnected {
+  background-color: #9E9E9E;
+  color: white;
+}
+
+.video-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.video-box {
+  background: #f5f5f5;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.video-element {
+  width: 100%;
+  max-height: 300px;
+  background: #000;
+  border-radius: 4px;
+}
+
+.peer-status {
+  color: #4CAF50;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.controls {
+  background: #f5f5f5;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 10px 15px;
+  margin: 0 5px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.btn-primary {
+  background-color: #2196F3;
+  color: white;
+}
+
+.btn-danger {
+  background-color: #F44336;
+  color: white;
+}
+
+.btn-default {
+  background-color: #E0E0E0;
+  color: black;
+}
+
+.btn:hover {
+  opacity: 0.9;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.connection-data {
+  margin: 20px 0;
+}
+
+.connection-data > div {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+  align-items: center;
+}
+
+.connection-data label {
+  min-width: 150px;
+}
+
+.input-field {
+  flex-grow: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.instructions {
+  background: #f5f5f5;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.instructions h3 {
+  margin-top: 0;
+}
+
+.device-status {
+  margin-bottom: 10px;
+}
+
+.device-status span {
+  margin-right: 15px;
+  font-size: 14px;
+}
+/* Add these to your existing App.css */
+
+.id-label {
+  color: #101111; /* Soft blue */
+  font-weight: bold;
+}
+
+.connect-label {
+  color: #6d4a9e; /* Soft purple */
+  font-weight: bold;
+}
+
+.instructions {
+  background: #f0f7ff; /* Very light blue background */
+  border-left: 2px solid #4a6fa5; /* Blue accent border */
+}
+
+.instructions h3 {
+  color: #2c5282; /* Dark blue */
+}
+
+.instructions p {
+  color: #4a5568; /* Dark gray-blue */
+}
+
+.device-status span {
+  color: #718096; /* Gray-blue */
+}
+
+.device-status span:first-child {
+  color: #c53030; /* Red for camera status */
+}
+
+.device-status span:last-child {
+  color: #2c7a7b; /* Teal for microphone status */
+}
