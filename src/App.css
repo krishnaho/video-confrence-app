@@ -152,39 +152,38 @@
   margin-right: 15px;
   font-size: 14px;
 }
-/* Add these to your existing App.css */
 
 .id-label {
-  color: #101111; /* Soft blue */
+  color: #101111;
   font-weight: bold;
 }
 
 .connect-label {
-  color: #6d4a9e; /* Soft purple */
+  color: #6d4a9e; 
   font-weight: bold;
 }
 
 .instructions {
-  background: #f0f7ff; /* Very light blue background */
-  border-left: 2px solid #4a6fa5; /* Blue accent border */
+  background: #f0f7ff; 
+  border-left: 2px solid #4a6fa5; 
 }
 
 .instructions h3 {
-  color: #2c5282; /* Dark blue */
+  color: #2c5282;
 }
 
 .instructions p {
-  color: #4a5568; /* Dark gray-blue */
+  color: #4a5568; 
 }
 
 .device-status span {
-  color: #718096; /* Gray-blue */
+  color: #718096;
 }
 
 .device-status span:first-child {
-  color: #c53030; /* Red for camera status */
+  color: #c53030; 
 }
 
 .device-status span:last-child {
-  color: #2c7a7b; /* Teal for microphone status */
+  color: #2c7a7b; 
 }

@@ -20,7 +20,6 @@ function App() {
   const localStreamRef = useRef(null);
   const connectionsRef = useRef({});
 
-  // Initialize PeerJS and check devices
   useEffect(() => {
     const checkDevices = async () => {
       try {
@@ -211,10 +210,10 @@ function App() {
       </div>
       
       <div className="controls">
-        <div className="device-status">
+        {/* <div className="device-status">
           <span>Camera: {deviceStatus.video === null ? '🔍 Checking...' : deviceStatus.video ? 'ON' : 'OFF'}</span>
           <span>Microphone: {deviceStatus.audio === null ? '🔍 Checking...' : deviceStatus.audio ? 'ON' : 'OFF'}</span>
-        </div>
+        </div> */}
         
         {!isBroadcasting && !isViewing && (
           <button 
